@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Diagnostics;
-
+using System.Windows.Forms;
+using System.Drawing;
 class WallpaperWindow
 {
     private const uint SMTO_NORMAL = 0x0000;
@@ -49,7 +50,9 @@ class WallpaperWindow
 
 class Program
 {
-    // static NotifyIcon trayIcon = new NotifyIcon();
+    static NotifyIcon trayIcon = new NotifyIcon();
+    static Process? exeProcess = null;
+
     static void Main(string[] args)
     {
         IntPtr hwnd = WallpaperWindow.GetWallpaperWindow();
@@ -57,27 +60,43 @@ class Program
         string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin", "SoultideWallpaper.exe");
 
         Directory.SetCurrentDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin"));
-        // var path = "./bin/SoultideWallpaper.exe";
         var cmdline = $"-parentHWND {hwnd}";//子ウィンドウとして起動
-        Process exe = Process.Start(path, cmdline);
+        exeProcess = Process.Start(path, cmdline);
 
-        // trayIcon.Text = "SoultideWallpaper";
-        // trayIcon.Icon = SystemIcons.Application; // 標準のアイコンを使用
+        trayIcon.Text = "SoultideWallpaper";
+        string iconFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appicon.ico");
+        if (File.Exists(iconFilePath))
+        {
+            using (FileStream fs = new FileStream(iconFilePath, FileMode.Open, FileAccess.Read))
+            {
+                trayIcon.Icon = new Icon(fs);
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Icon file not found: {iconFilePath}");
+            trayIcon.Icon = SystemIcons.Application; // アイコンファイルが見つからない場合はデフォルトアイコンを使用
+        }
 
         // // タスクトレイのコンテキストメニューを作成
-        // ContextMenuStrip contextMenu = new ContextMenuStrip();
-        // ToolStripMenuItem exitMenuItem = new ToolStripMenuItem("Exit", null, OnExit);
-        // contextMenu.Items.Add(exitMenuItem);
+        ContextMenuStrip contextMenu = new ContextMenuStrip();
+        ToolStripMenuItem exitMenuItem = new ToolStripMenuItem("Exit", null, OnExit);
+        contextMenu.Items.Add(exitMenuItem);
 
-        // trayIcon.ContextMenuStrip = contextMenu;
+        trayIcon.ContextMenuStrip = contextMenu;
 
         // タスクトレイにアイコンを表示
-        // trayIcon.Visible = true;
+        trayIcon.Visible = true;
+        Application.Run();
 
     }
-    // static void OnExit(object? sender, EventArgs e)
-    // {
-    //     trayIcon.Visible = false;
-    //     Application.Exit();
-    // }
+    static void OnExit(object? sender, EventArgs e)
+    {
+        trayIcon.Visible = false;
+        if (exeProcess != null && !exeProcess.HasExited)
+        {
+            exeProcess.Kill(); // プロセスを強制終了
+        }
+        Application.Exit();
+    }
 }
