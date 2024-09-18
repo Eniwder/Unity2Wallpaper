@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net4.8.1</TargetFramework> <!-- .NET 6.0 またはそれ以降を指定 -->
+    <LangVersion>10.0</LangVersion> <!-- C# 10.0 以上を指定 -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>appicon.ico</ApplicationIcon>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <!-- System.Net.Http は .NET Framework 4.7.2 以降で利用可能 -->
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <!-- <ItemGroup>
+    <PackageReference Include="System.Windows.Forms" Version="*" />
+    <PackageReference Include="System.Drawing.Common" Version="*" />
+    <Reference Include="System.Net.Http">
+      <HintPath>./System.Net.Http.dll</HintPath>
+    </Reference>
+  </ItemGroup> -->
+
+
+  <ItemGroup>
+    <!-- アイコンファイルの追加 -->
+    <None Update="appicon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>
