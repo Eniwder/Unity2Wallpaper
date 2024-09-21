@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Threading;
+
 class WallpaperWindow
 {
     private const uint SMTO_NORMAL = 0x0000;
@@ -52,15 +54,27 @@ class Program
 {
     static NotifyIcon trayIcon = new NotifyIcon();
     static Process? exeProcess = null;
+    static Mutex? mutex = null;
 
     static void Main(string[] args)
     {
+        // ミューテックスを使用して多重起動を防止
+        bool isNewInstance;
+        mutex = new Mutex(true, "SoultideWallpaperApp", out isNewInstance);
+
+        if (!isNewInstance)
+        {
+            // 既に起動している場合は、メッセージを表示して終了
+            MessageBox.Show("アプリケーションは既に起動しています。", "重複起動防止", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
         IntPtr hwnd = WallpaperWindow.GetWallpaperWindow();
         Console.WriteLine("Wallpaper Window Handle: " + hwnd.ToString("X"));
         string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin", "SoultideWallpaper.exe");
 
         Directory.SetCurrentDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin"));
-        var cmdline = $"-parentHWND {hwnd}";//子ウィンドウとして起動
+        var cmdline = $"-parentHWND {hwnd}"; // 子ウィンドウとして起動
         exeProcess = Process.Start(path, cmdline);
 
         trayIcon.Text = "SoultideWallpaper";
@@ -78,7 +92,7 @@ class Program
             trayIcon.Icon = SystemIcons.Application; // アイコンファイルが見つからない場合はデフォルトアイコンを使用
         }
 
-        // // タスクトレイのコンテキストメニューを作成
+        // タスクトレイのコンテキストメニューを作成
         ContextMenuStrip contextMenu = new ContextMenuStrip();
         ToolStripMenuItem exitMenuItem = new ToolStripMenuItem("Exit", null, OnExit);
         contextMenu.Items.Add(exitMenuItem);
@@ -88,8 +102,8 @@ class Program
         // タスクトレイにアイコンを表示
         trayIcon.Visible = true;
         Application.Run();
-
     }
+
     static void OnExit(object? sender, EventArgs e)
     {
         trayIcon.Visible = false;
